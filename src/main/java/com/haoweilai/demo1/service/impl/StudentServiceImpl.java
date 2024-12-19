@@ -2,10 +2,7 @@ package com.haoweilai.demo1.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.haoweilai.demo1.common.constants.AccountType;
-import com.haoweilai.demo1.common.constants.LoginConstants;
-import com.haoweilai.demo1.common.constants.OriginType;
-import com.haoweilai.demo1.common.constants.RedisConstants;
+import com.haoweilai.demo1.common.constants.*;
 import com.haoweilai.demo1.exceptions.*;
 import com.haoweilai.demo1.model.Student;
 import com.haoweilai.demo1.dao.StudentMapper;
@@ -56,6 +53,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         String username = loginReq.getUsername();
 
         String ip = IpUtil.getIpAddr(request);
+        ip = (request.getHeader(HeaderConstants.IPADDR) != null) ? request.getHeader(HeaderConstants.IPADDR) : ip;
         Student stu;
         if (AccountType.PASSWORD.equals(loginReq.getAccountType())) {
             // 1. 账号密码登录验证
@@ -109,23 +107,26 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         };
 
         String userId = String.valueOf(stu.getId());
-        String origin = String.valueOf(request.getHeader("origin"));
+        String origin = String.valueOf(request.getHeader(HeaderConstants.ORIGIN));
         // 登录认证成功，生成accessToken和refreshToken，其中refreshToken存到redis中
         String accessToken = JwtUtils.generateAccessToken(userId, origin, RsaUtils.privateKey, JwtUtils.EXPIRE_MINUTES);
         String refreshToken = JwtUtils.generateRefreshToken(userId, origin, RsaUtils.privateKey, JwtUtils.EXPIRE_MINUTES * 6 * 24 * 2);
 
-        if(redisRepository.exists(refreshToken)) {
+        String redisRefreshKey = RedisConstants.RedisKey.REFRESH_TOKEN_PREFIX + MD5Util.md5(refreshToken);
+        String kickIp = (String)redisRepository.get(redisRefreshKey);
+
+        if(redisRepository.exists(redisRefreshKey) && !ip.equals(kickIp)) {
             // 同一端登录
             // 需要踢人下线
+            System.out.println("踢人ip: " + kickIp + " username: " + username);
             kickOut(userId, origin);
         }
         // refreshToken前缀 + md5加密的token作为key，value是student对象
-        String redisRefreshKey = RedisConstants.RedisKey.REFRESH_TOKEN_PREFIX + MD5Util.md5(refreshToken);
-        redisRepository.setExpire(redisRefreshKey, refreshToken, 60 * 60 * 24 * 2);
+        redisRepository.setExpire(redisRefreshKey, ip, 60 * 60 * 24 * 2);
 
         // accessToken前缀 + md5加密的token作为key，value是student对象
         String redisAccessKey = RedisConstants.RedisKey.ACCESS_TOKEN_PREFIX + MD5Util.md5(accessToken);
-        redisRepository.setExpire(redisAccessKey, JSON.toJSONString(stu), 60 * 10);
+        redisRepository.setExpire(redisAccessKey, ip, 60 * 10);
 
 //        String sessionIp = tokenRedisService.getSessionIp(token, loginReq.getDeviceType());
 //        if(StringUtils.isNotBlank(sessionIp)) {
@@ -262,55 +263,6 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
         String userId = String.valueOf(studentReq.getId());
 
-        // 修改缓存
-        String accessTokenApp = JwtUtils.generateAccessToken(userId, OriginType.APP, RsaUtils.privateKey, JwtUtils.EXPIRE_MINUTES);
-        String refreshTokenApp = JwtUtils.generateRefreshToken(userId, OriginType.APP, RsaUtils.privateKey, JwtUtils.EXPIRE_MINUTES * 6 * 24 * 2);
-        String accessTokenWeb = JwtUtils.generateAccessToken(userId, OriginType.WEB, RsaUtils.privateKey, JwtUtils.EXPIRE_MINUTES);
-        String refreshTokenWeb = JwtUtils.generateRefreshToken(userId, OriginType.WEB, RsaUtils.privateKey, JwtUtils.EXPIRE_MINUTES * 6 * 24 * 2);
-
-        // 所有端的缓存都更新
-        // 多端并发，加分布式锁
-        Lock lock = redisLockRegistry.obtain(userId);
-
-        try {
-            if(lock.tryLock(100, TimeUnit.SECONDS)) {
-                try {
-                    if(redisRepository.exists(accessTokenApp)) {
-                        String redisKey = RedisConstants.RedisKey.REFRESH_TOKEN_PREFIX + MD5Util.md5(accessTokenApp);
-                        long time = redisRepository.getExpire(redisKey, TimeUnit.SECONDS);
-                        redisRepository.del(redisKey);
-                        redisRepository.setExpire(redisKey, JSON.toJSONString(student), time);
-                    }
-
-                    if(redisRepository.exists(accessTokenWeb)) {
-                        String redisKey = RedisConstants.RedisKey.REFRESH_TOKEN_PREFIX + MD5Util.md5(accessTokenWeb);
-                        long time = redisRepository.getExpire(redisKey, TimeUnit.SECONDS);
-                        redisRepository.del(redisKey);
-                        redisRepository.setExpire(redisKey, JSON.toJSONString(student), time);
-                    }
-
-                    if(redisRepository.exists(refreshTokenApp)) {
-                        String redisKey = RedisConstants.RedisKey.REFRESH_TOKEN_PREFIX + MD5Util.md5(refreshTokenApp);
-                        long time = redisRepository.getExpire(redisKey, TimeUnit.SECONDS);
-                        redisRepository.del(redisKey);
-                        redisRepository.setExpire(redisKey, refreshTokenApp, time);
-                    }
-
-                    if(redisRepository.exists(refreshTokenWeb)) {
-                        String redisKey = RedisConstants.RedisKey.REFRESH_TOKEN_PREFIX + MD5Util.md5(refreshTokenWeb);
-                        long time = redisRepository.getExpire(redisKey, TimeUnit.SECONDS);
-                        redisRepository.del(redisKey);
-                        redisRepository.setExpire(redisKey, refreshTokenWeb, time);
-                    }
-                } finally {
-                    lock.unlock();
-                }
-
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
         BeanUtils.copyProperties(student, studentResp);
         return studentResp;
     }
@@ -318,19 +270,8 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     @Override
     public Student getByToken() {
         String userId = userContextUtils.getUserId();
-        String origin = request.getHeader("Origin");
-
-        String accessToken = JwtUtils.generateAccessToken(userId, origin, RsaUtils.privateKey, JwtUtils.EXPIRE_MINUTES);
-        String redisAccessKey = RedisConstants.RedisKey.ACCESS_TOKEN_PREFIX + MD5Util.md5(accessToken);
-
-        if(redisRepository.exists(redisAccessKey)) {
-            String jsonString = (String)redisRepository.get(redisAccessKey);
-            Student student = (Student) JSON.parse(jsonString);
-            return student;
-        } else {
-            Student student = studentMapper.selectById(userId);
-            return student;
-        }
+        Student student = studentMapper.selectById(userId);
+        return student;
     }
 
 }

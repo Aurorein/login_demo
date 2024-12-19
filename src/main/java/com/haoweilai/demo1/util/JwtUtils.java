@@ -10,6 +10,7 @@ public class JwtUtils {
 
     public static final String JWT_KEY_USERID = "userId";
     public static final String JWT_KEY_ORIGIN = "origin";
+    public static final String JWT_KEY_IPADDR = "ip";
     public static final String JWT_KEY_ACCESS = "access";
     public static final String JWT_KEY_REFRESH = "refresh";
     public static final int EXPIRE_MINUTES = 600;
@@ -22,7 +23,7 @@ public class JwtUtils {
     }
 
     public static String generateRefreshToken(String userId, String origin, PrivateKey privateKey, int expireMinute) {
-        return generateToken(userId, origin, JWT_KEY_REFRESH, privateKey, expireMinute);
+        return generateToken(userId, origin,  JWT_KEY_REFRESH, privateKey, expireMinute);
     }
 
     public static String generateToken(String userId, String origin, String type, PrivateKey privateKey, int expireMinutes) {
@@ -31,7 +32,7 @@ public class JwtUtils {
                 .claim(JWT_KEY_USERID, userId)
                 .claim(JWT_KEY_ORIGIN, origin)
                 .claim(JWT_KEY_ACCESS, type)
-                .setExpiration(DateTime.now().plusMinutes(expireMinutes).toDate())
+//                .setExpiration(DateTime.now().plusMinutes(expireMinutes).toDate())
                 .signWith(SignatureAlgorithm.RS256, privateKey)
                 .compact();
     }
@@ -58,7 +59,7 @@ public class JwtUtils {
     }
 
     public static String getOriginFromToken(String token, PublicKey publicKey){
-        String userId = "";
+        String origin = "";
         Claims body = null;
         try {
             Jws<Claims> claimsJws = Jwts.parser().setSigningKey(publicKey).parseClaimsJws(token);
@@ -66,9 +67,10 @@ public class JwtUtils {
         }catch (ExpiredJwtException e){
             body = e.getClaims();
         }
-        userId = (String) body.get(JWT_KEY_ORIGIN);
-        return userId;
+        origin = (String) body.get(JWT_KEY_ORIGIN);
+        return origin;
     }
+
 
 }
 
