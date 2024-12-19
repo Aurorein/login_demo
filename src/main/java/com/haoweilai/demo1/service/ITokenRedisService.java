@@ -15,5 +15,7 @@ public interface ITokenRedisService {
 
     boolean isLocked(String userId, String ip);
 
+    void saveCode(String email, String code);
 
+    String getCode(String email);
 }

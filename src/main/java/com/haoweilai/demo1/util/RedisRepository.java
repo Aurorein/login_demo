@@ -494,5 +494,9 @@ public class RedisRepository {
     public void insert(String key, long index, Object value) {
         opsForList().set(key, index, value);
     }
+
+    public long getExpire(String key, TimeUnit timeUnit) {
+        return redisTemplate.getExpire(key, timeUnit);
+    }
 }
 

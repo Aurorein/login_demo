@@ -4,8 +4,16 @@ import javax.servlet.http.HttpServletRequest;
 
 public class TokenUtil {
 
-    public static String getToken(HttpServletRequest request) {
-        String token = request.getHeader("token");
+    private static final String ACCESS_TOKEN = "access_token";
+    private static final String REFRESH_TOKEN = "refresh_token";
+
+    public static String getAccessToken(HttpServletRequest request) {
+        String token = request.getHeader("ACCESS_TOKEN");
+        return token;
+    }
+
+    public static String getRefreshToken(HttpServletRequest request) {
+        String token = request.getHeader("REFRESH_TOKEN");
         return token;
     }
 }

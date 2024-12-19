@@ -2,4 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.haoweilai.demo1.dao.CourseMapper">
 
+    <select id="listByTime" resultType="com.haoweilai.demo1.model.Course">
+        select id, course_name, descrpt, course_time from course as c join student as s where s.id = #{userId} and c.course_time = #{courseTime}
+    </select>
 </mapper>

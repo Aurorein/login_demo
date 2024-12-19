@@ -56,5 +56,5 @@ public class Student implements Serializable {
 
     @ApiModelProperty("是否删除")
     @TableField("flag")
-    private Byte flag;
+    private Integer flag;
 }

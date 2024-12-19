@@ -115,6 +115,19 @@ public class TokenRedisService implements ITokenRedisService {
         }
     }
 
+    @Override
+    public void saveCode(String email, String code) {
+        redisRepository.setExpire(email, code, 60);
+    }
+
+    @Override
+    public String getCode(String email) {
+        if(redisRepository.exists(email)) {
+            return (String) redisRepository.get(email);
+        } else {
+            return null;
+        }
+    }
 
 
 }
