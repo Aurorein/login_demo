@@ -202,8 +202,8 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         // 验证用户名
         if(StringUtils.isNotEmpty(username)) {
             QueryWrapper<Student> wrapper = new QueryWrapper<Student>().eq("username", username);
-            boolean exists = studentMapper.exists(wrapper);
-            if(!exists) {
+            boolean exists = studentMapper.selectCount(wrapper) > 0;
+            if(exists) {
                 throw new UniqueUsernameException();
             }
         }
@@ -211,12 +211,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         // 验证邮箱格式
         if(StringUtils.isNotEmpty(email)) {
             QueryWrapper<Student> wrapper = new QueryWrapper<Student>().eq("email", email);
-            boolean exists = studentMapper.exists(wrapper);
+            boolean exists = studentMapper.selectCount(wrapper) > 0;
             if(exists) {
                 throw new UniqueEmailException();
             }
         }
-        return true;
+        return false;
 
     }
 

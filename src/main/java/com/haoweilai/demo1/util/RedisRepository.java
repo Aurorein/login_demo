@@ -72,7 +72,7 @@ public class RedisRepository {
     public void setExpire(final byte[] key, final byte[] value, final long time) {
         redisTemplate.execute((RedisCallback<Long>) connection -> {
             connection.setEx(key, time, value);
-            log.debug("[redisTemplate redis]放入 缓存  url:{} ========缓存时间为{}秒", key, time);
+//            log.debug("[redisTemplate redis]放入 缓存  url:{} ========缓存时间为{}秒", key, time);
             return 1L;
         });
     }
@@ -148,7 +148,7 @@ public class RedisRepository {
             byte[] keys = serializer.serialize(key);
             byte[] values = OBJECT_SERIALIZER.serialize(value);
             connection.set(keys, values);
-            log.debug("[redisTemplate redis]放入 缓存  url:{}", key);
+//            log.debug("[redisTemplate redis]放入 缓存  url:{}", key);
             return 1L;
         });
     }
@@ -194,7 +194,7 @@ public class RedisRepository {
      */
     public byte[] get(final byte[] key) {
         byte[] result = redisTemplate.execute((RedisCallback<byte[]>) connection -> connection.get(key));
-        log.debug("[redisTemplate redis]取出 缓存  url:{} ", key);
+//        log.debug("[redisTemplate redis]取出 缓存  url:{} ", key);
         return result;
     }
 
@@ -211,7 +211,7 @@ public class RedisRepository {
             byte[] values = connection.get(keys);
             return OBJECT_SERIALIZER.deserialize(values);
         });
-        log.debug("[redisTemplate redis]取出 缓存  url:{} ", key);
+//        log.debug("[redisTemplate redis]取出 缓存  url:{} ", key);
         return resultStr;
     }
 
@@ -223,7 +223,7 @@ public class RedisRepository {
      * @return the keys values
      */
     public Map<String, Object> getKeysValues(final String keyPatten) {
-        log.debug("[redisTemplate redis]  getValues()  patten={} ", keyPatten);
+//        log.debug("[redisTemplate redis]  getValues()  patten={} ", keyPatten);
         return redisTemplate.execute((RedisCallback<Map<String, Object>>) connection -> {
             RedisSerializer<String> serializer = getRedisSerializer();
             Map<String, Object> maps = new HashMap<>(16);
@@ -258,7 +258,7 @@ public class RedisRepository {
      * @param hashValue the hash value
      */
     public void putHashValue(String key, String hashKey, Object hashValue) {
-        log.debug("[redisTemplate redis]  putHashValue()  key={},hashKey={},hashValue={} ", key, hashKey, hashValue);
+//        log.debug("[redisTemplate redis]  putHashValue()  key={},hashKey={},hashValue={} ", key, hashKey, hashValue);
         opsForHash().put(key, hashKey, hashValue);
     }
 
@@ -270,7 +270,7 @@ public class RedisRepository {
      * @return the hash values
      */
     public Object getHashValues(String key, String hashKey) {
-        log.debug("[redisTemplate redis]  getHashValues()  key={},hashKey={}", key, hashKey);
+//        log.debug("[redisTemplate redis]  getHashValues()  key={},hashKey={}", key, hashKey);
         return opsForHash().get(key, hashKey);
     }
 
@@ -281,7 +281,7 @@ public class RedisRepository {
      * @param hashKeys the hash keys
      */
     public void delHashValues(String key, Object... hashKeys) {
-        log.debug("[redisTemplate redis]  delHashValues()  key={}", key);
+//        log.debug("[redisTemplate redis]  delHashValues()  key={}", key);
         opsForHash().delete(key, hashKeys);
     }
 
@@ -292,7 +292,7 @@ public class RedisRepository {
      * @return the hash value
      */
     public Map<String, Object> getHashValue(String key) {
-        log.debug("[redisTemplate redis]  getHashValue()  key={}", key);
+//        log.debug("[redisTemplate redis]  getHashValue()  key={}", key);
         return opsForHash().entries(key);
     }
 

@@ -4,6 +4,7 @@ import com.haoweilai.demo1.model.Student;
 import com.haoweilai.demo1.service.ITokenRedisService;
 import com.haoweilai.demo1.util.RedisRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Service
 public class TokenRedisService implements ITokenRedisService {
 
     @Autowired

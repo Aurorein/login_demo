@@ -7,10 +7,7 @@ import com.haoweilai.demo1.exceptions.EmailFormatException;
 import com.haoweilai.demo1.model.Student;
 import com.haoweilai.demo1.service.IStudentService;
 import com.haoweilai.demo1.util.MD5Util;
-import com.haoweilai.demo1.vo.LoginReq;
-import com.haoweilai.demo1.vo.LoginResp;
-import com.haoweilai.demo1.vo.StudentReq;
-import com.haoweilai.demo1.vo.StudentResp;
+import com.haoweilai.demo1.vo.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +30,9 @@ public class StudentController {
     @Autowired
     IStudentService studentService;
 
-    @GetMapping("list")
-    public List<Student> hello() {
-        return studentService.list();
+    @GetMapping("/list")
+    public ResultData<List<Student>> list() {
+        return ResultData.success(studentService.list());
     }
 
     @PostMapping("login")
@@ -66,7 +63,7 @@ public class StudentController {
         return ResultData.success(studentService.login(loginReq));
     }
 
-    @GetMapping("/list")
+    @GetMapping("/get")
     public ResultData<StudentResp> getByToken() {
         // 参数验证
         Student student = studentService.getByToken();
@@ -79,6 +76,12 @@ public class StudentController {
     public ResultData<StudentResp> edit(@RequestBody StudentReq studentReq) {
         StudentResp studentResp = studentService.editStu(studentReq);
         return ResultData.success(studentResp);
+    }
+
+    @PostMapping("/register")
+    public ResultData<RegisterResp> register(@RequestBody RegisterReq registerReq) {
+        RegisterResp register = studentService.register(registerReq);
+        return ResultData.success(register);
     }
 
 
