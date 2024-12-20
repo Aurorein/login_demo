@@ -87,11 +87,15 @@ public class TokenFilter implements Filter {
                 // accessToken前缀 + md5加密的token作为key，value是student对象
                 String redisAccessKey = RedisConstants.RedisKey.ACCESS_TOKEN_PREFIX + MD5Util.md5(accessToken1);
                 redisRepository.setExpire(redisAccessKey, ipAddr, 60 * 10);
+                filterChain.doFilter(request, response);
+                return;
             }
+        } else {
+            throw new LoginException();
         }
 
         // accessToken没过期，正常放行
-        filterChain.doFilter(request, response);
+//        filterChain.doFilter(request, response)
     }
 
     private String parseToken(String token) {

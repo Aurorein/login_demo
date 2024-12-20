@@ -19,5 +19,5 @@ import java.util.List;
 @Mapper
 public interface CourseMapper extends BaseMapper<Course> {
 
-    List<Course> listByTime(Long userId, Date courseTime);
+    List<Course> listByTime(Long userId, String courseTime);
 }

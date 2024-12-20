@@ -83,7 +83,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
             boolean isValided = validateLogin(String.valueOf(stu.getId()), password.equals(stu.getPassword()));
             if(!isValided) {
                 // 登录失败
-                throw new LockedException();
+                throw new PasswordAuthException();
             }
 
         } else {
@@ -126,7 +126,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
         // accessToken前缀 + md5加密的token作为key，value是student对象
         String redisAccessKey = RedisConstants.RedisKey.ACCESS_TOKEN_PREFIX + MD5Util.md5(accessToken);
-        redisRepository.setExpire(redisAccessKey, ip, 60 * 10);
+        redisRepository.setExpire(redisAccessKey, ip, 30);
 
 //        String sessionIp = tokenRedisService.getSessionIp(token, loginReq.getDeviceType());
 //        if(StringUtils.isNotBlank(sessionIp)) {
@@ -145,19 +145,14 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         String lockedKey = LoginConstants.LOCKED + userId;
         // 先判断有没有被锁定
         if(redisRepository.exists(lockedKey)) {
-            long remainTime = redisRepository.getExpire(lockedKey, TimeUnit.SECONDS);
-            // 还没有解锁，拒绝登录
-            if(remainTime > 0) {
-                throw new LockedException();
-            } else {
-                redisRepository.del(lockedKey);
-            }
+            throw new LockedException();
         }
 
         // 没有被锁定
         if(flag) {
            // 登录成功，重置计数器
             redisRepository.del(accountKey);
+            redisRepository.del(lockedKey);
             return true;
         } else {
             // 登录失败，增加登录次数

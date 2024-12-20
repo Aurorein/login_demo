@@ -3,6 +3,7 @@ package com.haoweilai.demo1.controller;
 import com.haoweilai.demo1.common.ResultData;
 import com.haoweilai.demo1.common.constants.AccountType;
 import com.haoweilai.demo1.common.constants.LoginConstants;
+import com.haoweilai.demo1.exceptions.AgrumentException;
 import com.haoweilai.demo1.exceptions.EmailFormatException;
 import com.haoweilai.demo1.model.Student;
 import com.haoweilai.demo1.service.IStudentService;
@@ -39,6 +40,11 @@ public class StudentController {
     public ResultData<LoginResp> login(@RequestBody LoginReq loginReq) {
         // 1. 登录方式，1是账号密码登录，2是邮箱登录
         // 参数验证
+
+        if(!AccountType.PASSWORD.equals(loginReq.getAccountType()) && !AccountType.EMAIL.equals(loginReq.getAccountType())) {
+            throw new AgrumentException();
+        }
+
         switch(loginReq.getAccountType()) {
             case AccountType.PASSWORD : {
                 if(StringUtils.isBlank(loginReq.getPassword())) {
@@ -51,10 +57,10 @@ public class StudentController {
             }
 
             case AccountType.EMAIL: {
-                if(StringUtils.isBlank(loginReq.getEmail())) {
-                    throw new RuntimeException();
+                if(StringUtils.isBlank(loginReq.getUsername())) {
+                    throw new AgrumentException();
                 }
-                if(!LoginConstants.EMAIL_ENGLISH_PATTERN.matcher(loginReq.getEmail()).matches()) {
+                if(!LoginConstants.EMAIL_ENGLISH_PATTERN.matcher(loginReq.getUsername()).matches()) {
                     throw new EmailFormatException();
                 }
                 break;

@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -27,6 +30,9 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     @Override
     public List<Course> listByTime(Long userId, Date courseTime) {
-        return courseMapper.listByTime(userId, courseTime);
+        SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd ");
+        String courseTimeStr = formatter.format( courseTime );
+
+        return courseMapper.listByTime(userId, courseTimeStr);
     }
 }

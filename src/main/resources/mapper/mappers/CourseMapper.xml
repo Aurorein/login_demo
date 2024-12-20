@@ -3,6 +3,7 @@
 <mapper namespace="com.haoweilai.demo1.dao.CourseMapper">
 
     <select id="listByTime" resultType="com.haoweilai.demo1.model.Course">
-        select id, course_name, descrpt, course_time from course as c join student as s where s.id = #{userId} and c.course_time = #{courseTime}
+        select c.id, c.course_name, c.descrpt, c.course_time from course as c join student as s join student_course as sc on sc.course_id = c.id and sc.student_id = s.id
+        where s.id = #{userId} and c.course_time = #{courseTime}
     </select>
 </mapper>
